@@ -43,6 +43,11 @@ on:
           - yes_sandbox_false
           - yes_sandbox_relaxed
           - yes_sandbox_true
+      x86_64-freebsd:
+        description: "Run on x86_64-freebsd"
+        required: true
+        type: boolean
+        default: false
       extra-args:
         description: "nixpkgs-review extra args"
         required: false
@@ -114,16 +119,19 @@ jobs:
           - aarch64-linux
           - x86_64-darwin
           - aarch64-darwin
+          - x86_64-freebsd
         exclude:
           - system: ${{ !inputs.x86_64-linux && 'x86_64-linux' || '' }}
           - system: ${{ !inputs.aarch64-linux && 'aarch64-linux' || '' }}
           - system: ${{ inputs.x86_64-darwin == 'no' && 'x86_64-darwin' || '' }}
           - system: ${{ inputs.aarch64-darwin == 'no' && 'aarch64-darwin' || '' }}
+          - system: ${{ !inputs.x86_64-freebsd && 'x86_64-freebsd' || '' }}
     runs-on: >-
       ${{ (matrix.system == 'x86_64-linux' && 'ubuntu-latest')
       || (matrix.system == 'aarch64-linux' && 'ubuntu-24.04-arm')
       || (matrix.system == 'x86_64-darwin' && 'macos-latest')
       || (matrix.system == 'aarch64-darwin' && 'macos-latest') }}
+      || (matrix.system == 'x86_64-freebsd' && fromJSON('["self-hosted", "freebsd"]')) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -134,6 +142,7 @@ jobs:
             flake.nix
 
       - name: setup nix
+        if: matrix.system != 'x86_64-freebsd'
         uses: ./.github/actions/setup-nix
         with:
           extra-nix-config: ${{ vars.EXTRA_NIX_CONFIG }}
